@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Outputs / logs
+*.out
+*.log
+job.out
+scripts/run_debug.out
+
+# Slurm
+*.slurm
+run.slurm
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Large generated results (optional: comment out if you REALLY want them)
+results/

@@ -54,8 +54,8 @@ class GaussianConvEncoder(nn.Module):
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(hidden_dims[-1]*4, latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1]*4, latent_dim)
+        self.fc_mu = nn.Linear(latent_dim)
+        self.fc_var = nn.Linear(latent_dim)
 
         for i in range(len(hidden_dims) - 1):
             modules.append(
@@ -103,6 +103,7 @@ class GaussianConvEncoder(nn.Module):
 
         # Split the result into mu and var components
         # of the latent Gaussian distribution
+        #print("DEBUG rep_emb result:", result.shape)
         mu = self.fc_mu(result)
         log_var = self.fc_var(result)
         log_var = F.softplus(log_var) + 1e-8

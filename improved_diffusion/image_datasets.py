@@ -11,8 +11,10 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from typing import Tuple
 
-# from datasets.morphomnist import io
-import io
+#from datasets.morphomnist import io
+import io as pyio
+from improved_diffusion import idxio
+#import io
 from torchvision import transforms
 
 
@@ -207,14 +209,16 @@ def load_morphomnist_like(root_dir, train: bool = True, columns=None) \
         images, labels, metrics
     """
     images_path, labels_path, metrics_path = _get_paths(root_dir, train)
-    images = io.load_idx(images_path)
-    labels = io.load_idx(labels_path)
+    images = idxio.load_idx(images_path)
+    labels = idxio.load_idx(labels_path)
 
     if columns is not None and 'index' not in columns:
         usecols = ['index'] + list(columns)
     else:
         usecols = columns
-    metrics = pd.read_csv(metrics_path, usecols=usecols, index_col='index')
+    metrics = pd.read_csv(metrics_path, index_col="index")
+    if columns is not None:
+        metrics = metrics.loc[:, columns]
     return images, labels, metrics
 
 
@@ -233,8 +237,8 @@ def save_morphomnist_like(images: np.ndarray, labels: np.ndarray, metrics: pd.Da
     assert len(images) == len(metrics)
     images_path, labels_path, metrics_path = _get_paths(root_dir, train)
     os.makedirs(root_dir, exist_ok=True)
-    io.save_idx(images, images_path)
-    io.save_idx(labels, labels_path)
+    idxio.save_idx(images, images_path)
+    idxio.save_idx(labels, labels_path)
     metrics.to_csv(metrics_path, index_label='index')
 
 
@@ -263,9 +267,9 @@ class MorphoMNISTLike(Dataset):
         self.columns = columns
 
         # normalization
-        self.scale = {'thickness': [3.4, 2.4], 'intensity': [161, 94]}
+        self.scale = {'thickness': [3.4, 2.4], 'slant': [0, 10]}
         # Gaussian normalization
-        self.gaussian_scale = {'thickness': [2.5, 0.63], 'intensity': [158.0, 48.4]}
+        self.gaussian_scale = {'thickness': [2.5, 0.63], 'slant': [0, 7.5]}
 
         # assert len(self.images) == len(self.labels) and len(self.images) == len(metrics_df)
 
@@ -289,9 +293,9 @@ class MorphoMNISTLike(Dataset):
         # print(img.shape)
         # exit(0)
         out_dict = {}
-        out_dict["y"] = np.array(self.labels[idx], dtype=np.int64)
+        out_dict["y"] = np.array(float(self.labels[idx]), dtype=np.int64)
 
-        out_dict["c"] = np.array([item["thickness"], item["intensity"]], dtype=np.float32)
+        out_dict["c"] = np.array([float(item["thickness"]), float(item["slant"])],dtype=np.float32)
 
         return np.transpose(img, [2, 0, 1]), out_dict
 
@@ -308,13 +312,13 @@ def get_dataloader_morphomnist(path, batch_size, split_set, shard, num_shards):
 
     if split_set == "train":
         dataset = MorphoMNISTLike(root_dir=path,
-                                columns=['thickness', 'intensity'], train=True, shard=shard, num_shards=num_shards)
+                                columns=['thickness', 'slant'], train=True, shard=shard, num_shards=num_shards)
 
         
         
     elif split_set == "val":
         dataset = MorphoMNISTLike(root_dir=path,
-                                columns=['thickness', 'intensity'], train=False, shard=shard, num_shards=num_shards)
+                                columns=['thickness', 'slant'], train=False, shard=shard, num_shards=num_shards)
         
         val_ratio = 0.1
         split = torch.utils.data.random_split(dataset, 
@@ -324,7 +328,7 @@ def get_dataloader_morphomnist(path, batch_size, split_set, shard, num_shards):
         dataset = split[1]
     else:
         dataset = MorphoMNISTLike(root_dir=path,
-                                columns=['thickness', 'intensity'], train=False, shard=shard, num_shards=num_shards)
+                                columns=['thickness', 'slant'], train=False, shard=shard, num_shards=num_shards)
     
     # return torch.utils.data.DataLoader(dataset, 
     #                                    shuffle=False, 
@@ -432,7 +436,7 @@ class CausalCircuit(Dataset):
             #     self.labels.append(self.img_labels[i])
             
             for i in range(len(temp)):
-                self.imgs.append(Image.open(io.BytesIO(temp[i])))
+                self.imgs.append(Image.open(pyio.BytesIO(temp[i])))
                 self.labels.append(self.img_labels[i])
             
         if dataset == "train":
@@ -453,7 +457,7 @@ class CausalCircuit(Dataset):
                 #     self.labels.append(self.img_labels[i])
                 
                 for i in range(len(temp)):
-                    self.imgs.append(Image.open(io.BytesIO(temp[i])))
+                    self.imgs.append(Image.open(pyio.BytesIO(temp[i])))
                     self.labels.append(self.img_labels[i])
                     
         self.labels = np.asarray(self.labels)[shard:][::num_shards]
@@ -549,7 +553,7 @@ class CausalCircuitSimplified(Dataset):
                 # print(filtered_images)
 
                 for i in range(len(filtered_images)):
-                    self.imgs.append(Image.open(io.BytesIO(filtered_images[i])))
+                    self.imgs.append(Image.open(pyio.BytesIO(filtered_images[i])))
                     self.labels.append(self.img_labels[i])
 
         else:
@@ -589,7 +593,7 @@ class CausalCircuitSimplified(Dataset):
             filtered_images = np.take(temp, indices)
 
             for i in range(len(filtered_images)):
-                self.imgs.append(Image.open(io.BytesIO(filtered_images[i])))
+                self.imgs.append(Image.open(pyio.BytesIO(filtered_images[i])))
                     
         self.dataset = dataset
         self.transforms = transforms.Compose([transforms.Resize(128), transforms.ToTensor()])
