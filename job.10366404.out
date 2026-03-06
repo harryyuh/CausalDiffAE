@@ -1,0 +1,2 @@
+[debug] SCRIPT_DIR=/var/spool/slurm/job10366404
+bash: scripts/morhomnist/train_mnist_causaldae.sh: No such file or directory

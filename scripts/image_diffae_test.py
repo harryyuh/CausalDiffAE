@@ -24,12 +24,12 @@ from improved_diffusion.script_util import (
 )
 from PIL import Image
 from torchvision.utils import save_image
-from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
-from datasets.generators import pendulum_script as pd
-from datasets.generators import morphomnist_script as ms
+# from sklearn.manifold import TSNE
+# from sklearn.decomposition import PCA
+# from datasets.generators import pendulum_script as pd
+# from datasets.generators import morphomnist_script as ms
 from improved_diffusion import metrics as mt
-from torchmetrics.image.fid import FrechetInceptionDistance
+#from torchmetrics.image.fid import FrechetInceptionDistance
 import torchvision.models as models
 import torch.nn as nn
 from improved_diffusion.nn import GaussianConvEncoderClf
@@ -159,7 +159,9 @@ def main():
             while batch_idx < 3750:
                 batch, cond = next(data)
                 # print(batch_idx)
-
+                print(cond.keys())
+                print(cond["c"].shape)
+                print(cond["c"][0])
                 mu, var = model.rep_emb.encode(batch.to(dist_util.dev()))
                 var = th.ones(mu.shape).to(mu.device) * 0.001
 
@@ -286,11 +288,11 @@ def main():
                 # exit(0)
                 
                 # GENERATE THE GROUND-TRUTH BASED ON CONDITIONED VALUES
-                v = ms.generate(thickness=labels[:, 0], intensity=labels[:, 1])
+                #v = ms.generate(thickness=labels[:, 0], intensity=labels[:, 1])
                 # real_angle.append(th.tensor(X_real))
                 
-                thickness_value = (v[:, 0] - mnist_scale[0][0]) / (mnist_scale[0][1] - 0)
-                intensity_value = (v[:, 1] - mnist_scale[1][0]) / (mnist_scale[1][1] - 0)
+                #thickness_value = (v[:, 0] - mnist_scale[0][0]) / (mnist_scale[0][1] - 0)
+                #intensity_value = (v[:, 1] - mnist_scale[1][0]) / (mnist_scale[1][1] - 0)
 
                 # mu[:, :16] = th.ones((args.batch_size, 16)) * 0.67 # 30
                 # mu[:, 16:32] = th.ones((args.batch_size, 16)) * angle_norm
@@ -321,12 +323,15 @@ def main():
                     model_kwargs=cond
                 )
                 
+                gathered_samples = [th.zeros_like(sample) for _ in range(dist.get_world_size())]
+                dist.all_gather(gathered_samples, sample)
+                all_images_thickness.extend([sample.cpu().numpy() for sample in gathered_samples])
                 
-                out = clf1(th.tensor(sample.cpu()))
-                thickness_distances.append(nn.L1Loss()(out, th.tensor(thickness_value).unsqueeze(1)))
+                #out = clf1(th.tensor(sample.cpu()))
+                #thickness_distances.append(nn.L1Loss()(out, th.tensor(thickness_value).unsqueeze(1)))
                 
-                out = clf2(th.tensor(sample.cpu()))
-                intensity_distances.append(nn.L1Loss()(out, th.tensor(intensity_value).unsqueeze(1)))
+                #out = clf2(th.tensor(sample.cpu()))
+                #intensity_distances.append(nn.L1Loss()(out, th.tensor(intensity_value).unsqueeze(1)))
 
                 # THICKNESS INTERVENTIONS
                 # mu, var = model.rep_emb.encode(batch.to(dist_util.dev()))
@@ -789,7 +794,7 @@ def main():
         
         
         
-        generate_interventions = False
+        generate_interventions = True
         if generate_interventions:
             if "morphomnist" in args.data_dir:
                 save_image(batch[:16], '../results/morphomnist/causaldiffae_masked/original.png')

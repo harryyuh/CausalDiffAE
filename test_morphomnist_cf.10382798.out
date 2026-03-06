@@ -1,0 +1,30 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) xalt/3.1.4
+Logging to /tmp/openai-2026-03-06-01-33-46-502905
+creating model and diffusion...
+creating data loader...
+batch shape: (16, 1, 28, 28)
+cond keys: ['y', 'c']
+cond['c'] shape: (16, 2)
+Example cond['c'][:8]:
+tensor([[ 5.1925, -0.1447],
+        [ 1.4903, -0.0449],
+        [ 2.3652, -0.0471],
+        [ 4.8820, -0.0390],
+        [ 2.2797, -0.0515],
+        [ 3.2191, -0.1181],
+        [ 9.2476,  0.1238],
+        [ 4.4371, -0.1102]])
+estimating attribute range...
+Estimated cond['c'] mins: tensor([ 0.9403, -0.5202])
+Estimated cond['c'] maxs: tensor([8.9700, 0.5930])
+sampling counterfactuals...
+Saved original grid to: /scratch/gilbreth/yu1331/results/morphomnist_cf/original_grid.png
+Saved counterfactual grid to: /scratch/gilbreth/yu1331/results/morphomnist_cf/counterfactual_grid.png
+Intervened attribute index: 1
+Intervened target value: -0.26713309362096055
+Latent block: [256:512]
+done.
+/var/spool/slurm/job10382798/slurm_script: line 49: --intervene_value: command not found
