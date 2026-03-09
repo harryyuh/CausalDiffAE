@@ -30,20 +30,18 @@ set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
 echo "[debug] SCRIPT_DIR=${SCRIPT_DIR:-<unset>}"
 
-# 固定 checkpoint 目录（放 scratch）
-export CKPT_ROOT="${SCRATCH:-$HOME}/ckpts/mnist_causaldae"
+# 重新训练：换一个全新的 checkpoint 目录
+export CKPT_ROOT="${SCRATCH:-$HOME}/ckpts/mnist_causaldae_newA"
 mkdir -p "$CKPT_ROOT"
-#export RESUME_CKPT="$CKPT_ROOT/latest.pt"
-LATEST_CKPT=$(ls -1 "$CKPT_ROOT"/model*.pt 2>/dev/null | tail -n 1 || true)
-export RESUME_CKPT="${LATEST_CKPT:-}"
+
+# 关键：不要 resume 旧 checkpoint
+export RESUME_CKPT=""
 export DIFFUSION_BLOB_LOGDIR="$CKPT_ROOT"
 
-# 你可以按训练速度调小，让 kill 前一定能存到最新（比如 1000）
 export SAVE_INTERVAL=2000
 
 on_usr1() {
   echo "[`date`] Got SIGUSR1. Requeueing job $SLURM_JOB_ID ..."
-  # 注意：这一步只是把 job 放回队列；当前这次运行仍会在 time limit 时结束
   scontrol requeue "$SLURM_JOB_ID" || echo "WARN: requeue failed."
 }
 trap on_usr1 USR1

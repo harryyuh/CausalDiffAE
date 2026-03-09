@@ -1,0 +1,24 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) xalt/3.1.4
+Testing thickness intervention (idx=0)
+Logging to /tmp/openai-2026-03-09-18-55-04-861105
+creating model and diffusion...
+creating data loader...
+batch shape: (16, 1, 28, 28)
+cond keys: ['y', 'c']
+cond['c'] shape: (16, 2)
+Example cond['c'][:8]:
+tensor([[ 6.2539,  0.3983],
+        [ 1.2304,  0.2304],
+        [ 2.1890,  0.2738],
+        [10.2465,  0.0140],
+        [ 1.4314,  0.2732],
+        [ 1.6928,  0.4096],
+        [ 2.9038,  0.4901],
+        [ 4.9429,  0.2148]])
+estimating attribute range...
+Estimated cond['c'] mins: tensor([ 0.9701, -0.5198])
+Estimated cond['c'] maxs: tensor([12.3255,  0.7533])
+sampling counterfactuals...

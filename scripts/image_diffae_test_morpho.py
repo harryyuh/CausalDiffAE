@@ -157,12 +157,21 @@ def main():
                     f"Attribute {args.intervene_idx} has zero range: min=max={low}"
                 )
 
-            target_norm = (target_value - low) / (high - low)
+            #target_norm = (target_value - low) / (high - low)
 
             # ---- intervene latent block ----
             # For MorphoMNIST in your original code, latent_dim=512 and one variable
             # was controlled by mu[:, 256:512]. We keep this behavior configurable.
-            mu[:, args.latent_start:args.latent_end] = target_norm
+            # ---- intervene latent block ----
+            latent_dim = mu.shape[1]
+            if latent_dim % args.n_vars != 0:
+                raise ValueError(f"latent_dim={latent_dim} is not divisible by n_vars={args.n_vars}")
+
+            block_size = latent_dim // args.n_vars
+            start = args.intervene_idx * block_size
+            end = (args.intervene_idx + 1) * block_size
+
+            mu[:, start:end] = target_value
 
             z = reparameterize(mu, var)
 
@@ -211,7 +220,7 @@ def main():
             print(f"Saved counterfactual grid to: {os.path.join(args.out_dir, 'counterfactual_grid.png')}")
             print(f"Intervened attribute index: {args.intervene_idx}")
             print(f"Intervened target value: {target_value}")
-            print(f"Latent block: [{args.latent_start}:{args.latent_end}]")
+            print(f"Latent block: [{start}:{end}]")
             saved = True
 
         count += 1

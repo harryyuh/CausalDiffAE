@@ -569,7 +569,7 @@ class UNetModel(nn.Module):
                 # CAUSAL MASKING OF REPRESENTATION
                 if self.causal_modeling:
                     if self.n_vars == 2:
-                        A = th.tensor([[0, 1], [0, 0]], dtype=th.float32).to(mu.device)
+                        A = th.tensor([[0, 0], [0, 0]], dtype=th.float32).to(mu.device)
                     else:
                         # CIRCUIT
                         A = th.tensor([[0, 1, 1, 1], [0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 0]], dtype=th.float32).to(mu.device)
